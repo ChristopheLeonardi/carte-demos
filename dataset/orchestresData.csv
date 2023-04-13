@@ -1,0 +1,8 @@
+﻿type_acteur,nom_orchestre,operateur,presentation,region,geolocalisation
+Orchestre Démos,demos1,Philharmonie de paris,Lorem ipsum dolor sic amet,Hauts-de-France,"49.973736302935784, 3.919747013491316"
+Orchestre Avancé,avancé 1,Philharmonie de paris,Lorem ipsum dolor sic amet,Hauts-de-France,"49.99655153944654, 3.0538940445022895"
+Orchestre labellisés «réseau Démos»,label1,ope2,Lorem ipsum dolor sic amet,Outre Mer,"16.206159783629857, -61.65389297650508"
+Orchestre Démos,demos2,ope3,Lorem ipsum dolor sic amet,Outre Mer,"3.9718074341534773, -52.53707375581754"
+Orchestre Avancé,avancé 2,Philharmonie de paris,Lorem ipsum dolor sic amet,Normandie,"48.92249577551127, -0.534611620078125"
+Orchestre Démos,demos3,ope2,Lorem ipsum dolor sic amet,Occitanie,"43.67641555988386, 1.9841267295379073"
+Orchestre labellisés «réseau Démos»,label2,ope2,Lorem ipsum dolor sic amet,Hauts-de-France,"49.973736302935784, 3.919747013491316"
