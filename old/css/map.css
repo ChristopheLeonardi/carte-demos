@@ -1,37 +1,3 @@
-@font-face {
-    font-family: "open_sans";
-    font-style: normal;
-    font-weight: 400;
-    src: url("../font/openSans-regular-webfont.woff2") format("woff2");
-}
-
-@font-face {
-    font-family: "open_sans";
-    font-style: bold;
-    font-weight: 400;
-    src: url("../font/openSans-bold-webfont.woff2") format("woff2");
-}
-
-@font-face {
-    font-family: "Baskerville";
-    font-style: bold;
-    font-weight: 600;
-    src: url("../font/Baskerville-Bold_gdi.woff") format("woff");
-}
-
-@font-face {
-    font-family: "Philharmonique";
-    font-weight: 400;
-    src: url("../font/Philharmonique-SemiBold.woff2") format("woff2");
-}
-
-@font-face {
-    font-family: "Philharmonique";
-    font-style: bold;
-    font-weight: 600;
-    src: url("../font/Philharmonique-Bold.woff2") format("woff2");
-}
-
 body {
     background-color: #efefef;
 }

@@ -10,20 +10,14 @@
     <script src="js/functions.js"></script>
     <title>carte demos</title>
     <link href="css/map.css" rel="stylesheet">
+    <link href="fonts.css" rel="stylesheet">
 </head>
 <body>
     <div id="map_demos">
-        <section id="cartouche-container"></section>
+        <section id="cartouche-container">
+        </section>
         <section id="map-container"></section>
         <section id="map-widget">
-            <div class="widget" data-name="Île-de-France">
-                <img src="img/IDF.png" alt="Carte de la présence des orchestres Démos en Île-de-France"/>
-                <h3>Île-de-France</h3>
-            </div>
-            <div class="widget" data-name="Outre Mer">
-                <img src="img/OM.png" alt="Carte de la présence des orchestres Démos en Outre Mer"/>
-                <h3>Outre Mer</h3>
-            </div>
         </section>
 
     </div>
