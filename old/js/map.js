@@ -1,60 +1,46 @@
 $(document).ready(function() {
-    $("#cartouche-container").load("/ui/plug-in/integration/carte-demos/cartouche-template.html")
-    
-    // Patch, En certains cas les promesses ne chargent pas les fichiers de data, reload dans ce cas
-    setTimeout(() => {
-        if($("#svg_container").length == 0){
-            location.reload()
-        }
-    }, 1000)
-    
+
+    $("#cartouche-container").load(`cartouche-template.html`)
+
     const config = {
         "orchestre": [
             { "type": "Orchestre Démos", "color": "#f39a89" },
-            { "type": "Orchestre Démos Avancé", "color": "#a82b39" },
-            { "type": "Orchestre labellisé réseau Démos", "color": "#8d71aa" }
+            { "type": "Orchestre Avancé", "color": "#a82b39" },
+            { "type": "Orchestre labellisés «réseau Démos»", "color": "#8d71aa" }
         ]
     }
 
     var promises = []
-    promises.push((d3.json("/ui/plug-in/integration/carte-demos/dataset/fr_regions.txt")))
-    promises.push((d3.csv("/ui/plug-in/integration/carte-demos/dataset/orchestresData.csv")))
-    promises.push((d3.csv("/ui/plug-in/integration/carte-demos/dataset/regionsData.csv")))
+    promises.push((d3.json("dataset/fr_regions.geojson")))
+    promises.push((d3.csv("dataset/orchestresData.csv")))
+    promises.push((d3.csv("dataset/regionsData.csv")))
 
-    
-    Promise.all(promises)
-        .then(data => {
-            const geojson = data[0]
-            window["orchestres"] = data[1]
-            window["regions"] = data[2]
+    Promise.all(promises).then(data => {
 
-            create_map(config, geojson)
-            $("#access_button").click(e => {
-                create_access_table()
-            })
-            window.onresize = e => { create_map(config, geojson) }
+        const geojson = data[0]
+        window["orchestres"] = data[1]
+        window["regions"] = data[2]
 
-            Array.from($(".widget")).map(widget => {
-                $(widget).click(e => { create_popup($(e.target).parent()[0]) })
-            })
-            $(window).keyup(e => {
-                if (($("#popup").length) && e.keyCode === 27) {
-                    $("#popup").remove()
-                }
-            })
-            $("#popup").remove()
-
-
+        create_map(config, geojson)
+        $("#access_button").click(e => {
+            create_access_table()
         })
-       .catch((e) => {
-            console.log(e)
-       })
+        window.onresize = e => { create_map(config, geojson) }
 
+        Array.from($(".widget")).map(widget => {
+            $(widget).click(e => { create_popup($(e.target).parent()[0]) })
+        })
+        $(window).keyup(e => {
+            if (($("#popup").length) && e.keyCode === 27) {
+                $("#popup").remove()
+            }
+        })
 
+    })
 })
 
 const create_map = (config, geojson) => {
-    
+
     // Reset Map
     $("#svg_container").remove()
 
@@ -63,7 +49,7 @@ const create_map = (config, geojson) => {
         $("#map-container").width($("#map_demos").width())
         var width = $("#map-container").width()
     } else {
-        $("#map-container").width($("#map_demos").width() * 0.6)
+        $("#map-container").width($("#map_demos").width() * 0.5)
         var width = $("#map-container").width()
         if (width > 600) { width = 600 }
     }
@@ -118,7 +104,7 @@ const create_map = (config, geojson) => {
 
     svg.append("g").attr("class", "orchestres")
         .selectAll("circle")
-        .data( window["orchestres"].filter(item => item.region != "Île-de-France") )
+        .data(window["orchestres"])
         .enter()
         .append("circle")
         .attr("r", 5)
@@ -136,14 +122,17 @@ const create_tooltip = (elt, event) => {
     let title = document.createElement("h4")
     title.textContent = elt.properties.nom
     container.appendChild(title)
-    var posX = window.innerWidth < 1110 ? event.pageX : event.pageX - 380
-    $(container).css("left", `${posX}px`)
-    $(container).css("top", `${event.clientY - 200 }px`)
+    $(document).on("mousemove", e => {
+        console.log(e)
+        $(container).css("left", `${e.clientX + 30}px`)
+        $(container).css("top", `${e.clientY}px`)
+    })
 
     document.getElementById("map-container").appendChild(container)
 }
 
 const create_popup = elt => {
+
     // Filter data by region
     var filtered_orchestres = window["orchestres"].filter(orchestre => (orchestre.region == $(elt).attr("data-name")))
 
@@ -161,41 +150,16 @@ const create_popup = elt => {
     var container = document.createElement("section")
     container.setAttribute("id", "popup")
 
+    create_close_popup(container)
 
     let popup_container = document.createElement("div")
     popup_container.setAttribute("id", "popup_container")
 
     let container_title = document.createElement("h3")
     container_title.textContent = $(elt).attr("data-name")
-    
-    
-    create_close_popup(container, popup_container)
 
     popup_container.appendChild(container_title)
 
-    // legend
-     let legend = document.createElement("ul")
-    legend.setAttribute("class", "legend")
-
-    var types = [...new Set(filtered_orchestres.map(t => { return t.type_acteur }))]
-    types.map(item => {
-        let li = document.createElement("li")
-
-        let img = document.createElement("img")
-        img.setAttribute("src", `/ui/plug-in/integration/carte-demos/img/${normalize_string(item)}.svg`)
-        li.appendChild(img)
-
-        let p = document.createElement("p")
-        p.textContent = item
-        li.appendChild(p)
-
-        legend.appendChild(li)
-    })
-
-    popup_container.appendChild(legend)
-    container.appendChild(popup_container)
-   
-    
     // Create list of operateur
     var operateurs = [...new Set(filtered_orchestres.map(o => { return o.operateur }))]
 
@@ -216,7 +180,7 @@ const create_popup = elt => {
             nom_orchestre.removeAttribute('id')
 
             let img = clone.querySelector("#vignette_orchestre")
-            img.setAttribute("src", `/ui/plug-in/integration/carte-demos/img/${normalize_string(item.type_acteur)}.svg`)
+            img.setAttribute("src", `./img/${normalize_string(item.type_acteur)}.svg`)
             img.removeAttribute('id')
 
             let presentation = clone.querySelector("#presentation")
@@ -245,32 +209,32 @@ const create_popup = elt => {
 
     popup_container.appendChild(weblink)
 
-//    let legend = document.createElement("ul")
-//    legend.setAttribute("class", "legend")
-//
-//    var types = [...new Set(filtered_orchestres.map(t => { return t.type_acteur }))]
-//    types.map(item => {
-//        let li = document.createElement("li")
-//
-//        let img = document.createElement("img")
-//        img.setAttribute("src", `/ui/plug-in/integration/carte-demos/img/${normalize_string(item)}.svg`)
-//        li.appendChild(img)
-//
-//        let p = document.createElement("p")
-//        p.textContent = item
-//        li.appendChild(p)
-//
-//        legend.appendChild(li)
-//    })
-//
-//    popup_container.appendChild(legend)
-//    container.appendChild(popup_container)
+    let legend = document.createElement("ul")
+    legend.setAttribute("class", "legend")
+
+    var types = [...new Set(filtered_orchestres.map(t => { return t.type_acteur }))]
+    types.map(item => {
+        let li = document.createElement("li")
+
+        let img = document.createElement("img")
+        img.setAttribute("src", `./img/${normalize_string(item)}.svg`)
+        li.appendChild(img)
+
+        let p = document.createElement("p")
+        p.textContent = item
+        li.appendChild(p)
+
+        legend.appendChild(li)
+    })
+
+    popup_container.appendChild(legend)
+    container.appendChild(popup_container)
 
 
     $("#map_demos").append(container)
 
 }
-const create_close_popup = (container, container_button)  => {
+const create_close_popup = container => {
     var close_overlay = document.createElement("div")
     close_overlay.setAttribute("id", "popupClose")
     $(close_overlay).on("click", e => { container.remove() })
@@ -281,7 +245,7 @@ const create_close_popup = (container, container_button)  => {
     close_button.setAttribute("title", "Fermer la popup")
     close_button.textContent = "X"
     $(close_button).on("click", e => { container.remove() })
-    container_button.appendChild(close_button)
+    container.appendChild(close_button)
 }
 const create_access_table = () => {
 
@@ -293,13 +257,12 @@ const create_access_table = () => {
     var container = document.createElement("section")
     container.setAttribute("id", "popup")
 
+    create_close_popup(container)
 
     var table = document.createElement("table")
     table.setAttribute("id", "popup_container")
     var caption = document.createElement("caption")
     caption.textContent = "Liste des orchestres Démos"
-    
-    create_close_popup(container, table)
 
     table.appendChild(caption)
 
@@ -323,7 +286,6 @@ const create_access_table = () => {
     var regions = [...new Set(window["orchestres"].map(item => { return item.region }))]
 
     regions.map(region => {
-        
         var filtered_orchestres = window["orchestres"].filter(orchestre => (orchestre.region == region))
         filtered_orchestres.map(item => {
 
@@ -341,19 +303,14 @@ const create_access_table = () => {
             create_td(item.type_acteur)
             create_td(item.operateur)
             create_td(item.presentation)
-            
-            const getRegionLink = region => {
-                let selectRegion = window["regions"].filter(region_data => region_data.regions === region)
-                return selectRegion[0].link_url
-            }
 
             var lien = document.createElement("td")
             var webButton = document.createElement("a")
-            webButton.setAttribute("class", "weblink")
-            webButton.setAttribute("alt", "Aller sur la page de la région dans un nouvel onglet")
-            webButton.setAttribute("href", getRegionLink(region))
+            webButton.setAttribute("class", "btn btn-default")
+            webButton.setAttribute("alt", "Nouvel onglet")
+            webButton.setAttribute("href", item.lien)
             webButton.setAttribute("target", "_blank")
-            webButton.textContent = "Page de la région"
+            webButton.textContent = item.lien_alt
 
             lien.appendChild(webButton)
             tr.appendChild(lien)
@@ -364,21 +321,8 @@ const create_access_table = () => {
 
     })
 
-
     table.appendChild(body)
     container.appendChild(table)
     $("#map_demos").append(container)
 
-}
-
-const normalize_string = str => {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/gm, "_")
-}
-
-const define_color = (elt, config) => {
-    if (!elt.type_acteur) {
-        return
-    }
-    let filtered = config.orchestre.filter(item => { if (elt.type_acteur == item.type) { return item } })
-    return filtered[0].color
 }

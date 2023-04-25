@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Calque_2" aria-labelledby="title" data-name="Calque 2" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15.7 15.7">
+  <title id="title">Orchestres labellisés reseau Démos</title>
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #8d71aa;
+      }
+    </style>
+  </defs>
+  <g id="Calque_1-2" data-name="Calque 1">
+    <path class="cls-1" d="m7.85,15.7c4.34,0,7.85-3.52,7.85-7.85S12.19,0,7.85,0,0,3.51,0,7.85s3.51,7.85,7.85,7.85"/>
+  </g>
+</svg>
