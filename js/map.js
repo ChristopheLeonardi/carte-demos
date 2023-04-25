@@ -34,12 +34,14 @@ $(document).ready(function() {
         },
         "widgets": [{
                 "name": "Île-de-France",
-                "icon": "/ui/plug-in/integration/carte-demos/img/IDF.png",
+                "icon": "/ui/plug-in/integration/carte-demos/img/IDF.svg",
+                "icon_hover": "/ui/plug-in/integration/carte-demos/img/IDF_hover.svg",
                 "alt_text": "Carte de la présence des orchestres Démos en Île-de-France"
             },
             {
                 "name": "Outre Mer",
-                "icon": "/ui/plug-in/integration/carte-demos/img/OM.png",
+                "icon": "/ui/plug-in/integration/carte-demos/img/OM.svg",
+                "icon_hover": "/ui/plug-in/integration/carte-demos/img/OM_hover.svg",
                 "alt_text": "Carte de la présence des orchestres Démos en Outre Mer"
             }
         ]
@@ -420,6 +422,12 @@ const create_map_widgets = () => {
         let img = document.createElement("img")
         img.setAttribute("src", w_data.icon)
         img.setAttribute("alt", w_data.alt_text)
+        $(img).on("mouseover", e => {
+            img.setAttribute("src", w_data.icon_hover)
+        })
+        $(img).on("mouseout", e => {
+            img.setAttribute("src", w_data.icon)
+        })
         widget.appendChild(img)
 
         let h3 = document.createElement("h3")
