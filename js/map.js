@@ -1,8 +1,9 @@
+
 $(document).ready(function() {
 
     window["config"] = {
         "cartouche": {
-            "cartouche_title": "Déploiement en octobre 2022",
+            "cartouche_title": "Déploiement en mars 2023",
             "access_icon": "/ui/plug-in/integration/carte-demos/img/accessibility_icon.svg",
             "access_alt": "Voir la version accessible de la carte sous forme de tableau"
         },
@@ -13,15 +14,15 @@ $(document).ready(function() {
                 "icon": "/ui/plug-in/integration/carte-demos/img/Orchestre_Demos.svg",
             },
             {
-                "type": "Orchestre Démos Avancé",
+                "type": "Orchestre Démos avancé",
                 "color": "#a82b39",
                 "legend": "11 orchestres Démos avancés",
                 "icon": "/ui/plug-in/integration/carte-demos/img/Orchestre_Avance.svg",
             },
             {
-                "type": "Orchestre labellisé réseau Démos",
+                "type": "Orchestre labellisé Réseau Démos",
                 "color": "#8d71aa",
-                "legend": "4 orchestres labellisés réseau Démos",
+                "legend": "2 orchestres labellisés Réseau Démos",
                 "icon": "/ui/plug-in/integration/carte-demos/img/Orchestre_labellise_reseau_Demos.svg",
             }
 
@@ -30,7 +31,9 @@ $(document).ready(function() {
             "bouton_region": "Aller sur la page de la région",
             "table_title": "Liste des orchestres Démos",
             "table_header": ["Région", "Nom de l'orchestre", "Type d'acteur", "Opérateur", "Présentation", "Lien"],
-            "table_button": "Page de la région"
+            "table_button": "Page de la région",
+            "operateur_name": "Opérateur",
+            "operateur_image": "https://demos.philharmoniedeparis.fr/ui/skins/CIMUD/images/operateur.svg"
         },
         "widgets": [{
                 "name": "Île-de-France",
@@ -39,33 +42,54 @@ $(document).ready(function() {
                 "alt_text": "Carte de la présence des orchestres Démos en Île-de-France"
             },
             {
-                "name": "Outre Mer",
+                "name": "Outre-Mer",
                 "icon": "/ui/plug-in/integration/carte-demos/img/OM.svg",
                 "icon_hover": "/ui/plug-in/integration/carte-demos/img/OM_hover.svg",
-                "alt_text": "Carte de la présence des orchestres Démos en Outre Mer"
+                "alt_text": "Carte de la présence des orchestres Démos en Outre-Mer"
             }
         ]
     }
 
     $("#cartouche-container").load("/ui/plug-in/integration/carte-demos/cartouche-template.html")
 
-    var promises = []
-    promises.push((d3.json("/ui/plug-in/integration/carte-demos/dataset/fr_regions.txt")))
-    promises.push((d3.csv("/ui/plug-in/integration/carte-demos/dataset/orchestresData.csv")))
-    promises.push((d3.csv("/ui/plug-in/integration/carte-demos/dataset/regionsData.csv")))
+    $("#cartouche-container").hide()
+    
+    let splash_container = document.createElement("div")
+    let splash = document.createElement("img")
+    splash.setAttribute("id", "carte-demos-splash")
+    splash.setAttribute("src", "/ui/plug-in/integration/carte-demos/img/splash.gif")
 
-    // Patch, En certains cas les promesses ne chargent pas les fichiers de data, reload dans ce cas
-    setTimeout(() => {
-        if ($("#svg_container").length == 0) {
-            Promise.all(promises)
-                .then(data => {
-                    construct_page(data)
-                })
-                .catch((e) => {
-                    console.log(e)
-                })
+    splash_container.appendChild(splash)
+    $("#map_demos").append(splash_container)
+    
+    const promises = []
+    const get_data = promises => {
+
+        const controller = new AbortController();
+
+        try {
+            promises.push((d3.json("/ui/plug-in/integration/carte-demos/dataset/fr_regions.txt")))
+            promises.push((d3.csv("/ui/plug-in/integration/carte-demos/dataset/orchestresData.csv")))
+            promises.push((d3.csv("/ui/plug-in/integration/carte-demos/dataset/regionsData.csv")))
+            setTimeout(() => controller.abort(), 1000);
+            Promise.all(promises, {signal: controller.signal})
+                    .then(data => {
+                        window["data"] = data
+                        $("#cartouche-container").show()
+                        $("#carte-demos-splash").remove()
+                    })
         }
-    }, 100)
+        catch(err){
+            console.log(err)
+        }
+    }
+    const wait_for_data = () => {
+        get_data(promises)
+        typeof window["data"] !== "undefined" ? construct_page(window["data"]) : setTimeout(wait_for_data, 250);   
+
+    }
+    wait_for_data()
+
 
 })
 
@@ -172,8 +196,9 @@ const create_tooltip = (elt, event) => {
     title.textContent = elt.properties.nom
     container.appendChild(title)
     $(document).on("mousemove", e => {
+        var y = window.scrollY
         $(container).css("left", `${e.clientX + 30}px`)
-        $(container).css("top", `${e.clientY}px`)
+        $(container).css("top", `${e.pageY - y + 30}px`)
     })
 
     document.getElementById("map-container").appendChild(container)
@@ -225,19 +250,34 @@ const create_popup = elt => {
         legend.appendChild(li)
     })
 
+    var operateur_legend = document.createElement("li")
+
+    let operateur_legend_img = document.createElement("img")
+    operateur_legend_img.setAttribute("src", window.config.label.operateur_image)
+    operateur_legend.appendChild(operateur_legend_img)
+
+    let operateur_legend_name = document.createElement("p")
+    operateur_legend_name.textContent = window.config.label.operateur_name
+    operateur_legend.appendChild(operateur_legend_name)
+
+    legend.appendChild(operateur_legend)
+
     popup_container.appendChild(legend)
     container.appendChild(popup_container)
 
     // Upload template
     var template = document.querySelector(`#cartouche-template`)
 
+    var operateurs_container = document.createElement("div")
+    operateurs_container.setAttribute("class", "operateur-container")
+
     // Create list of operateur
     var operateurs = [...new Set(filtered_orchestres.map(o => { return o.operateur }))]
 
     operateurs.forEach(operateur => {
 
-        let operateur_container = document.createElement("div")
-        operateur_container.setAttribute("class", "operateur")
+        let single_operateur_container = document.createElement("div")
+        single_operateur_container.setAttribute("class", "operateur")
 
         // Create orchestre card
         filtered_orchestres.map(item => {
@@ -246,19 +286,15 @@ const create_popup = elt => {
             }
             var clone = document.importNode(template.content, true)
 
-            let nom_orchestre = clone.querySelector("#nom_orchestre")
-            nom_orchestre.textContent = item.nom_orchestre
-            nom_orchestre.removeAttribute('id')
-
             let img = clone.querySelector("#vignette_orchestre")
             img.setAttribute("src", `/ui/plug-in/integration/carte-demos/img/${normalize_string(item.type_acteur)}.svg`)
             img.removeAttribute('id')
 
-            let presentation = clone.querySelector("#presentation")
-            presentation.innerHTML = item.presentation
-            presentation.removeAttribute('id')
+            let nom_orchestre = clone.querySelector("#nom_orchestre")
+            nom_orchestre.textContent = item.nom_orchestre
+            nom_orchestre.removeAttribute('id')
 
-            operateur_container.appendChild(clone)
+            single_operateur_container.appendChild(clone)
 
         })
 
@@ -266,9 +302,10 @@ const create_popup = elt => {
         let operateur_name = document.createElement("p")
         operateur_name.setAttribute("class", "operateur_name")
         operateur_name.textContent = operateur
-        operateur_container.appendChild(operateur_name)
+        single_operateur_container.appendChild(operateur_name)
 
-        popup_container.appendChild(operateur_container)
+        operateurs_container.appendChild(single_operateur_container)
+        popup_container.appendChild(operateurs_container)
     })
 
     let region = window["regions"].filter(item => { return item.regions == $(elt).attr("data-name") })
